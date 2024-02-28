@@ -4,7 +4,7 @@ local actors = require 'actors'
 local max_xtargs = 1
 
 if mq.TLO.Me.XTargetSlots() ~= nil then
-    local max_xtargs = mq.TLO.Me.XTargetSlots()
+    max_xtargs = mq.TLO.Me.XTargetSlots()
 end
 
 

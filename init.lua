@@ -15,7 +15,7 @@ local myName = mq.TLO.Me.DisplayName()
 local max_xtargs = 1
 
 if mq.TLO.Me.XTargetSlots() ~= nil then
-	local max_xtargs = mq.TLO.Me.XTargetSlots()
+	max_xtargs = mq.TLO.Me.XTargetSlots()
 end
 
 local window_flags = bit32.bor(ImGuiWindowFlags.None)
