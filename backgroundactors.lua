@@ -1,15 +1,16 @@
 local mq = require 'mq'
 local actors = require 'actors'
 
+local max_xtargs = 1
 
+if mq.TLO.Me.XTargetSlots() ~= nil then
+    local max_xtargs = mq.TLO.Me.XTargetSlots()
+end
 
 
 local actor = actors.register(function(message)
 
 end)
-
-
-
 
 local function casting(line, arg1)
     local ID
@@ -17,7 +18,7 @@ local function casting(line, arg1)
         if string.find(arg1, "Turgur's Virulent Swarm") then
             local xtargs = mq.TLO.Me.XTarget()
             if mq.TLO.Me.XTarget() > 0 then
-                for i = 1, 20 do
+                for i = 1, max_xtargs do
                     if mq.TLO.Me.XTarget(i).Type() == 'NPC' then
                         if mq.TLO.Me.XTarget(i).Distance() <= mq.TLO.Spell("Turgur's Virulent Swarm").AERange() then
                             ID = mq.TLO.Me.XTarget(i).ID()
@@ -56,7 +57,7 @@ local function casting(line, arg1)
         elseif mq.TLO.Me.Casting.Subcategory() == 'Enthrall' then
             if mq.TLO.Me.Casting.AERange() > 0 then
                 if mq.TLO.Me.XTarget() > 0 then
-                    for i = 1, 20 do
+                    for i = 1, max_xtargs do
                         if mq.TLO.Me.XTarget(i).Type() == 'NPC' then
                             if mq.TLO.Me.XTarget(i).Distance() <= mq.TLO.Me.Casting.AERange() then
                                 ID = mq.TLO.Me.XTarget(i).ID()
@@ -89,7 +90,7 @@ local function casting(line, arg1)
     elseif mq.TLO.Me.Class.ShortName() == 'ENC' then
         if string.find(arg1, "Enveloping Helix") then
             if mq.TLO.Me.XTarget() > 0 then
-                for i = 1, 20 do
+                for i = 1, max_xtargs do
                     if mq.TLO.Me.XTarget(i).Type() == 'NPC' then
                         if mq.TLO.Me.XTarget(i).Distance() <= mq.TLO.Spell("Enveloping Helix").AERange() then
                             ID = mq.TLO.Me.XTarget(i).ID()
@@ -115,7 +116,7 @@ local function casting(line, arg1)
         elseif mq.TLO.Me.Casting.Subcategory() == 'Enthrall' then
             if mq.TLO.Me.Casting.AERange() > 0 then
                 if mq.TLO.Me.XTarget() > 0 then
-                    for i = 1, 20 do
+                    for i = 1, max_xtargs do
                         if mq.TLO.Me.XTarget(i).Type() == 'NPC' then
                             if mq.TLO.Me.XTarget(i).Distance() <= mq.TLO.Me.Casting.AERange() then
                                 ID = mq.TLO.Me.XTarget(i).ID()

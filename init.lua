@@ -12,6 +12,12 @@ local running = true
 local xtxheader = "\ay[\agXTargetX\ay]"
 local myName = mq.TLO.Me.DisplayName()
 
+local max_xtargs = 1
+
+if mq.TLO.Me.XTargetSlots() ~= nil then
+	local max_xtargs = mq.TLO.Me.XTargetSlots()
+end
+
 local window_flags = bit32.bor(ImGuiWindowFlags.None)
 local treeview_table_flags = bit32.bor(ImGuiTableFlags.Reorderable, ImGuiTableFlags.Hideable, ImGuiTableFlags.RowBg,
 	ImGuiTableFlags.Borders, ImGuiTableFlags.Resizable, ImGuiTableFlags.SizingFixedFit)
@@ -47,7 +53,7 @@ local listCleanup = function()
 	for ID in pairs(slowedList) do
 		local remove = false
 		remove = mq.TLO.Me.XTarget() == 0
-		for i = 1, mq.TLO.Me.XTargetSlots() do
+		for i = 1, max_xtargs do
 			if mq.TLO.Me.XTarget(i).Type() == 'NPC' or mq.TLO.Me.XTarget(i).Type() == 'Pet' then
 				if mq.TLO.Me.XTarget(i).ID() == ID then
 					remove = false
@@ -64,7 +70,7 @@ local listCleanup = function()
 	for ID in pairs(mezzedList) do
 		local remove = false
 		remove = mq.TLO.Me.XTarget() == 0
-		for i = 1, mq.TLO.Me.XTargetSlots() do
+		for i = 1, max_xtargs do
 			if mq.TLO.Me.XTarget(i).Type() == 'NPC' or mq.TLO.Me.XTarget(i).Type() == 'Pet' then
 				if mq.TLO.Me.XTarget(i).ID() == ID then
 					remove = false
@@ -447,7 +453,7 @@ local displayGUI = function()
 		ImGui.TableSetupColumn("Mez", bit32.bor(ImGuiTableColumnFlags.NoResize), 60)
 		ImGui.TableSetupScrollFreeze(0, 1)
 		ImGui.TableHeadersRow()
-		for i = 1, mq.TLO.Me.XTargetSlots() do
+		for i = 1, max_xtargs do
 			if mq.TLO.Me.XTarget(i)() ~= '' then
 				local drawData = {}
 				drawData.row = i
