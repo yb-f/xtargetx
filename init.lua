@@ -14,6 +14,9 @@ local myName = mq.TLO.Me.DisplayName()
 
 local max_xtargs = 1
 
+local size = 25
+local angle = 0
+
 if mq.TLO.Me.XTargetSlots() ~= nil then
 	max_xtargs = mq.TLO.Me.XTargetSlots()
 end
@@ -29,6 +32,36 @@ local slowedList = {}
 local mezzedList = {}
 
 local openGUI, drawGUI = true, true
+
+function RotatePoint(p, cx, cy, angle)
+	local radians = math.rad(angle)
+	local cosA = math.cos(radians)
+	local sinA = math.sin(radians)
+
+	local newX = cosA * (p.x - cx) - sinA * (p.y - cy) + cx
+	local newY = sinA * (p.x - cx) + cosA * (p.y - cy) + cy
+
+	return ImVec2(newX, newY)
+end
+
+function DrawArrow(topPoint, width, height, color)
+	local draw_list = ImGui.GetWindowDrawList()
+	local p1 = ImVec2(topPoint.x, topPoint.y)
+	local p2 = ImVec2(topPoint.x + width, topPoint.y + height)
+	local p3 = ImVec2(topPoint.x - width, topPoint.y + height)
+
+	-- center
+	local center_x = (p1.x + p2.x + p3.x) / 3
+	local center_y = (p1.y + p2.y + p3.y) / 3
+
+	-- rotate
+	angle = angle + .01
+	p1 = RotatePoint(p1, center_x, center_y, angle)
+	p2 = RotatePoint(p2, center_x, center_y, angle)
+	p3 = RotatePoint(p3, center_x, center_y, angle)
+
+	draw_list:AddTriangleFilled(p1, p2, p3, ImGui.GetColorU32(color))
+end
 
 local actor = actors.register(function(message)
 	if message.content.id == 'slowed' then
@@ -381,6 +414,15 @@ local drawRow = function(drawData)
 	--distance
 	ImGui.TableNextColumn()
 	ImGui.TextColored(drawData.distTextColor, tostring(drawData.distance))
+	--Direction
+	ImGui.TableNextColumn()
+	local cursorScreenPos = ImGui.GetCursorScreenPosVec()
+	if drawData.spawn.HeadingTo.Degrees() ~= nil and mq.TLO.Me.Heading.Degrees() ~= nil then
+		angle = drawData.spawn.HeadingTo.Degrees() - mq.TLO.Me.Heading.Degrees()
+	else
+		angle = 0
+	end
+	DrawArrow(ImVec2(cursorScreenPos.x + size / 2, cursorScreenPos.y), 5, 15, drawData.distTextColor)
 	--hp
 	ImGui.TableNextColumn()
 	if settings.hp.hpAsBar == true then
@@ -430,14 +472,15 @@ local displayGUI = function()
 		ImGui.PushStyleColor(ImGuiCol.TableRowBgAlt, settings.general.colorTableBgAlt)
 		ImGui.PushStyleColor(ImGuiCol.TableHeaderBg, settings.general.colorTableHeaderBg)
 		if settings.general.useRowHeaders == true then
-			ImGui.BeginTable('##table1', 9, treeview_table_flags)
+			ImGui.BeginTable('##table1', 10, treeview_table_flags)
 			ImGui.TableSetupColumn("Row", bit32.bor(ImGuiTableColumnFlags.NoResize), 30)
 		else
-			ImGui.BeginTable('##table1', 8, treeview_table_flags)
+			ImGui.BeginTable('##table1', 9, treeview_table_flags)
 		end
 		ImGui.TableSetupColumn("Lvl", bit32.bor(ImGuiTableColumnFlags.NoResize), 30)
 		ImGui.TableSetupColumn("Name", bit32.bor(ImGuiTableColumnFlags.WidthStretch, ImGuiTableColumnFlags.NoResize), 100)
 		ImGui.TableSetupColumn("Dist", bit32.bor(ImGuiTableColumnFlags.NoResize), 50)
+		ImGui.TableSetupColumn("Dir", bit32.bor(ImGuiTableColumnFlags.NoResize), 30)
 		if settings.hp.hpAsBar == true then
 			ImGui.TableSetupColumn("HP", bit32.bor(ImGuiTableColumnFlags.NoResize), 100)
 		else
