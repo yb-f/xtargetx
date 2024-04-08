@@ -11,11 +11,11 @@ local configSettings = {}
 local xtxheader = "\ay[\agXTargetX\ay]"
 local themeFile = mq.configDir .. '/MyThemeZ.lua'
 settings.openSettingsGUI, settings.drawSettingsGUI = false, false
-settings.theme = {}
+local theme = {}
 local settings_window_flags = bit32.bor(ImGuiWindowFlags.NoCollapse)
 local settings_coloredit_flags = bit32.bor(ImGuiColorEditFlags.AlphaBar, ImGuiColorEditFlags.AlphaPreview,
     ImGuiColorEditFlags.NoInputs)
-
+settings.configPath = 'xtargetx_config_' .. myName .. '.lua'
 ---comment Check to see if the file we want to work on exists.
 ---@param name string -- Full Path to file
 ---@return boolean -- returns true if the file exists and false otherwise
@@ -24,21 +24,19 @@ function settings.File_Exists(name)
     if f~=nil then io.close(f) return true else return false end
 end
 
----comment Writes settings from the settings table passed to the setting file (full path required)
--- Uses mq.pickle to serialize the table and write to file
----@param file string -- File Name and path
----@param table table -- Table of settings to write
-function settings.writeSettings(file, table)
-    mq.pickle(file, table)
+
+function settings.saveTheme()
+    configSettings.general.themeName = settings.general.themeName
+    mq.pickle(settings.configPath, configSettings)
+    settings.initSettings()
 end
 
 function settings.loadTheme()
     if settings.File_Exists(themeFile) then
-        settings.theme = dofile(themeFile)
+        theme = dofile(themeFile)
         else
-        settings.theme = require('themes')
+        theme = require('themes')
     end
-    configSettings.general.themeName = settings.theme.LoadTheme or 'Default'
 end
 
 settings.initSettings = function()
@@ -195,16 +193,16 @@ end
 function settings.DrawTheme(themeName)
     local StyleCounter = 0
     local ColorCounter = 0
-    for tID, tData in pairs(settings.theme.Theme) do
+    for tID, tData in pairs(theme.Theme) do
         if tData.Name == themeName then
-            for pID, cData in pairs(settings.theme.Theme[tID].Color) do
+            for pID, cData in pairs(theme.Theme[tID].Color) do
                 ImGui.PushStyleColor(pID, ImVec4(cData.Color[1], cData.Color[2], cData.Color[3], cData.Color[4]))
                 ColorCounter = ColorCounter + 1
             end
             if tData['Style'] ~= nil then
                 if next(tData['Style']) ~= nil then
                     
-                    for sID, sData in pairs (settings.theme.Theme[tID].Style) do
+                    for sID, sData in pairs (theme.Theme[tID].Style) do
                         if sData.Size ~= nil then
                             ImGui.PushStyleVar(sID, sData.Size)
                             StyleCounter = StyleCounter + 1
@@ -228,6 +226,7 @@ settings.settingsGUI = function()
         ImGui.BeginChild('##Settings_Buttons', ImGui.GetWindowContentRegionWidth(), 25, ImGuiChildFlags.None)
         if ImGui.Button('Save Settings') then
             printf("%s Saving Settings...", xtxheader)
+            configSettings.general.themeName = settings.general.themeName
             mq.pickle(settings.configPath, configSettings)
             settings.initSettings()
             settings.openSettingsGUI = false
@@ -416,7 +415,7 @@ settings.settingsGUI = function()
 end
 
 settings.loadSettings = function()
-    settings.configPath = 'xtargetx_config_' .. myName .. '.lua'
+    
     local configData, err = loadfile(mq.configDir .. '/' .. settings.configPath)
     if err then
         settings.createConfig()
