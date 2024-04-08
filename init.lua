@@ -6,7 +6,7 @@ local mq = require 'mq'
 local ImGui = require 'ImGui'
 local actors = require 'actors'
 local settings = require 'xtxsettings'
-
+local theme = require('themes')
 local running = true
 
 local xtxheader = "\ay[\agXTargetX\ay]"
@@ -375,6 +375,18 @@ local rowContext = function(row)
 			ImGui.EndMenu()
 		end
 		ImGui.Separator()
+		if ImGui.BeginMenu('ThemeZ') then
+			local ThemeName = settings.general.themeName
+				for k, data in pairs(settings.theme.Theme) do
+					if ImGui.MenuItem(data.Name, '', (data.Name == ThemeName)) then
+						settings.theme.LoadTheme = data.Name
+						ThemeName = settings.theme.LoadTheme
+						settings.general.themeName = ThemeName
+					end
+				end
+			ImGui.EndMenu()
+		end
+		ImGui.Separator()
 		if ImGui.Selectable("Settings", false, ImGuiSelectableFlags.SpanAllColumns) then
 			mq.cmd('/xtx settings')
 		end
@@ -466,6 +478,7 @@ end
 
 local displayGUI = function()
 	if not openGUI then running = false end
+	local ColorCount, StyleCount = settings.DrawTheme(settings.general.themeName)
 	openGUI, drawGUI = ImGui.Begin('XTargetX##' .. myName, openGUI, settings.window_flags)
 	if drawGUI then
 		ImGui.PushStyleColor(ImGuiCol.TableRowBg, settings.general.colorTableBg)
@@ -555,6 +568,8 @@ local displayGUI = function()
 		ImGui.EndTable()
 		ImGui.PopStyleColor(3)
 	end
+	if ColorCount > 0 then ImGui.PopStyleColor(ColorCount) end
+	if StyleCount > 0 then ImGui.PopStyleVar(StyleCount) end
 	ImGui.End()
 end
 
