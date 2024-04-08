@@ -274,107 +274,109 @@ end
 
 local rowContext = function(row)
 	if ImGui.BeginPopupContextItem(row) then
-		if ImGui.BeginMenu("NPC Targets") then
-			if ImGui.MenuItem("Empty Target") then
-				printf("%s \agSeting Slot \ar%s \agto \arEmpty Target", xtxheader, row)
-				mq.cmdf("/xtarget set %s emptytarget", row)
-			end
-			if ImGui.MenuItem("Auto Hater") then
-				printf("%s \agSeting Slot \ar%s \agto \arAuto Hater", xtxheader, row)
-				mq.cmdf("/xtarget set %s autohater", row)
-			end
-			if ImGui.MenuItem("Target's Target") then
-				printf("%s \agSeting Slot \ar%s \agto \arTarget's Target", xtxheader, row)
-				mq.cmdf("/xtarget set %s targetstarget", row)
-			end
-			if ImGui.MenuItem("Group Mark Target 1") then
-				printf("%s \agSeting Slot \ar%s \agto \arGroup Mark Target 1", xtxheader, row)
-				mq.cmdf("/xtarget set %s groupmark1", row)
-			end
-			if ImGui.MenuItem("Group Mark Target 2") then
-				printf("%s \agSeting Slot \ar%s \agto \arGroup Mark Target 2", xtxheader, row)
-				mq.cmdf("/xtarget set %s groupmark2", row)
-			end
-			if ImGui.MenuItem("Group Mark Target 3") then
-				printf("%s \agSeting Slot \ar%s \agto \arGroup Mark Target 3", xtxheader, row)
-				mq.cmdf("/xtarget set %s groupmark3", row)
-			end
-			if ImGui.MenuItem("Raid Mark Target 1") then
-				printf("%s \agSeting Slot \ar%s \agto \arRaid Mark Target 1", xtxheader, row)
-				mq.cmdf("/xtarget set %s raidmark1", row)
-			end
-			if ImGui.MenuItem("Raid Mark Target 2") then
-				printf("%s \agSeting Slot \ar%s \agto \arRaid Mark Target 2", xtxheader, row)
-				mq.cmdf("/xtarget set %s raidmark2", row)
-			end
-			if ImGui.MenuItem("Raid Mark Target 3") then
-				printf("%s \agSeting Slot \ar%s \agto \arRaid Mark Target 3", xtxheader, row)
-				mq.cmdf("/xtarget set %s raidmark3", row)
-			end
-			if ImGui.MenuItem("My Pet's Target") then
-				printf("%s \agSeting Slot \ar%s \agto \arMy Pet's Target", xtxheader, row)
-				mq.cmdf("/xtarget set %s pettarget", row)
-			end
-			if ImGui.MenuItem("My Mercenary's Target") then
-				printf("%s \agSeting Slot \ar%s \agto \arMy Mercenary's Target", xtxheader, row)
-				mq.cmdf("/xtarget set %s mercenarytarget", row)
-			end
-			ImGui.EndMenu()
-		end
-		if ImGui.BeginMenu("Friendly Targets") then
-			if ImGui.MenuItem("Group Tank") then
-				printf("%s \agSeting Slot \ar%s \agto \arGroup Tank", xtxheader, row)
-				mq.cmdf("/xtarget set %s grouptank", row)
-			end
-			if ImGui.MenuItem("Group Assist") then
-				printf("%s \agSeting Slot \ar%s \agto \arGroup Assist", xtxheader, row)
-				mq.cmdf("/xtarget set %s groupassist", row)
-			end
-			if ImGui.MenuItem("Puller") then
-				printf("%s \agSeting Slot \ar%s \agto \arPuller", xtxheader, row)
-				mq.cmdf("/xtarget set %s puller", row)
-			end
-			if ImGui.MenuItem("Raid Assist 1") then
-				printf("%s \agSeting Slot \ar%s \agto \arRaid Assist 1", xtxheader, row)
-				mq.cmdf("/xtarget set %s raidassist1", row)
-			end
-			if ImGui.MenuItem("Raid Assist 2") then
-				printf("%s \agSeting Slot \ar%s \agto \arRaid Assist 2", xtxheader, row)
-				mq.cmdf("/xtarget set %s raidassist2", row)
-			end
-			if ImGui.MenuItem("Raid Assist 3") then
-				printf("%s \agSeting Slot \ar%s \agto \arRaid Assist 3", xtxheader, row)
-				mq.cmdf("/xtarget set %s raidassist3", row)
-			end
-			if ImGui.MenuItem("My Pet") then
-				printf("%s \agSeting Slot \ar%s \agto \arMy Pet", xtxheader, row)
-				mq.cmdf("/xtarget set %s mypet", row)
-			end
-			if ImGui.MenuItem("My Mercenary") then
-				printf("%s \agSeting Slot \ar%s \agto \arMy Mercenary", xtxheader, row)
-				mq.cmdf("/xtarget set %s mymercenary", row)
-			end
-			ImGui.EndMenu()
-		end
-		if ImGui.BeginMenu("Group Members") then
-			for i = 0, mq.TLO.Group.GroupSize() - 1 do
-				if ImGui.MenuItem(mq.TLO.Group.Member(i).Name()) then
-					printf("%s \agSeting Slot \ar%s \agto \ar%s", xtxheader, row, mq.TLO.Group.Member(i).Name())
-					mq.cmdf("/xtarget set %s %s", row, mq.TLO.Group.Member(i).Name())
+		-- if row ~= 0 then
+			if ImGui.BeginMenu("NPC Targets") then
+				if ImGui.MenuItem("Empty Target") then
+					printf("%s \agSeting Slot \ar%s \agto \arEmpty Target", xtxheader, row)
+					mq.cmdf("/xtarget set %s emptytarget", row)
 				end
-			end
-			ImGui.EndMenu()
-		end
-		if ImGui.BeginMenu("Raid Members") then
-			for i = 0, mq.TLO.Raid.Members() - 1 do
-				if ImGui.MenuItem(mq.TLO.Raid.Member(i).Name()) then
-					printf("%s \agSeting Slot \ar%s \agto \ar%s", xtxheader, row, mq.TLO.Group.Member(i).Name())
-					mq.cmdf("/xtarget set %s %s", row, mq.TLO.Raid.Member(i).Name())
+				if ImGui.MenuItem("Auto Hater") then
+					printf("%s \agSeting Slot \ar%s \agto \arAuto Hater", xtxheader, row)
+					mq.cmdf("/xtarget set %s autohater", row)
 				end
+				if ImGui.MenuItem("Target's Target") then
+					printf("%s \agSeting Slot \ar%s \agto \arTarget's Target", xtxheader, row)
+					mq.cmdf("/xtarget set %s targetstarget", row)
+				end
+				if ImGui.MenuItem("Group Mark Target 1") then
+					printf("%s \agSeting Slot \ar%s \agto \arGroup Mark Target 1", xtxheader, row)
+					mq.cmdf("/xtarget set %s groupmark1", row)
+				end
+				if ImGui.MenuItem("Group Mark Target 2") then
+					printf("%s \agSeting Slot \ar%s \agto \arGroup Mark Target 2", xtxheader, row)
+					mq.cmdf("/xtarget set %s groupmark2", row)
+				end
+				if ImGui.MenuItem("Group Mark Target 3") then
+					printf("%s \agSeting Slot \ar%s \agto \arGroup Mark Target 3", xtxheader, row)
+					mq.cmdf("/xtarget set %s groupmark3", row)
+				end
+				if ImGui.MenuItem("Raid Mark Target 1") then
+					printf("%s \agSeting Slot \ar%s \agto \arRaid Mark Target 1", xtxheader, row)
+					mq.cmdf("/xtarget set %s raidmark1", row)
+				end
+				if ImGui.MenuItem("Raid Mark Target 2") then
+					printf("%s \agSeting Slot \ar%s \agto \arRaid Mark Target 2", xtxheader, row)
+					mq.cmdf("/xtarget set %s raidmark2", row)
+				end
+				if ImGui.MenuItem("Raid Mark Target 3") then
+					printf("%s \agSeting Slot \ar%s \agto \arRaid Mark Target 3", xtxheader, row)
+					mq.cmdf("/xtarget set %s raidmark3", row)
+				end
+				if ImGui.MenuItem("My Pet's Target") then
+					printf("%s \agSeting Slot \ar%s \agto \arMy Pet's Target", xtxheader, row)
+					mq.cmdf("/xtarget set %s pettarget", row)
+				end
+				if ImGui.MenuItem("My Mercenary's Target") then
+					printf("%s \agSeting Slot \ar%s \agto \arMy Mercenary's Target", xtxheader, row)
+					mq.cmdf("/xtarget set %s mercenarytarget", row)
+				end
+				ImGui.EndMenu()
 			end
-			ImGui.EndMenu()
-		end
+			if ImGui.BeginMenu("Friendly Targets") then
+				if ImGui.MenuItem("Group Tank") then
+					printf("%s \agSeting Slot \ar%s \agto \arGroup Tank", xtxheader, row)
+					mq.cmdf("/xtarget set %s grouptank", row)
+				end
+				if ImGui.MenuItem("Group Assist") then
+					printf("%s \agSeting Slot \ar%s \agto \arGroup Assist", xtxheader, row)
+					mq.cmdf("/xtarget set %s groupassist", row)
+				end
+				if ImGui.MenuItem("Puller") then
+					printf("%s \agSeting Slot \ar%s \agto \arPuller", xtxheader, row)
+					mq.cmdf("/xtarget set %s puller", row)
+				end
+				if ImGui.MenuItem("Raid Assist 1") then
+					printf("%s \agSeting Slot \ar%s \agto \arRaid Assist 1", xtxheader, row)
+					mq.cmdf("/xtarget set %s raidassist1", row)
+				end
+				if ImGui.MenuItem("Raid Assist 2") then
+					printf("%s \agSeting Slot \ar%s \agto \arRaid Assist 2", xtxheader, row)
+					mq.cmdf("/xtarget set %s raidassist2", row)
+				end
+				if ImGui.MenuItem("Raid Assist 3") then
+					printf("%s \agSeting Slot \ar%s \agto \arRaid Assist 3", xtxheader, row)
+					mq.cmdf("/xtarget set %s raidassist3", row)
+				end
+				if ImGui.MenuItem("My Pet") then
+					printf("%s \agSeting Slot \ar%s \agto \arMy Pet", xtxheader, row)
+					mq.cmdf("/xtarget set %s mypet", row)
+				end
+				if ImGui.MenuItem("My Mercenary") then
+					printf("%s \agSeting Slot \ar%s \agto \arMy Mercenary", xtxheader, row)
+					mq.cmdf("/xtarget set %s mymercenary", row)
+				end
+				ImGui.EndMenu()
+			end
+			if ImGui.BeginMenu("Group Members") then
+				for i = 0, mq.TLO.Group.GroupSize() - 1 do
+					if ImGui.MenuItem(mq.TLO.Group.Member(i).Name()) then
+						printf("%s \agSeting Slot \ar%s \agto \ar%s", xtxheader, row, mq.TLO.Group.Member(i).Name())
+						mq.cmdf("/xtarget set %s %s", row, mq.TLO.Group.Member(i).Name())
+					end
+				end
+				ImGui.EndMenu()
+			end
+			if ImGui.BeginMenu("Raid Members") then
+				for i = 0, mq.TLO.Raid.Members() - 1 do
+					if ImGui.MenuItem(mq.TLO.Raid.Member(i).Name()) then
+						printf("%s \agSeting Slot \ar%s \agto \ar%s", xtxheader, row, mq.TLO.Group.Member(i).Name())
+						mq.cmdf("/xtarget set %s %s", row, mq.TLO.Raid.Member(i).Name())
+					end
+				end
+				ImGui.EndMenu()
+			end
 		ImGui.Separator()
+		-- end
 		if ImGui.BeginMenu('ThemeZ') then
 			local ThemeName = settings.general.themeName
 				for k, data in pairs(settings.theme.Theme) do
@@ -397,6 +399,7 @@ local rowContext = function(row)
 		ImGui.EndPopup()
 	end
 end
+
 
 local drawRow = function(drawData)
 	ImGui.TableNextRow()
@@ -480,7 +483,9 @@ local displayGUI = function()
 	if not openGUI then running = false end
 	local ColorCount, StyleCount = settings.DrawTheme(settings.general.themeName)
 	openGUI, drawGUI = ImGui.Begin('XTargetX##' .. myName, openGUI, settings.window_flags)
+	local drawn = false
 	if drawGUI then
+		ImGui.BeginGroup()
 		ImGui.PushStyleColor(ImGuiCol.TableRowBg, settings.general.colorTableBg)
 		ImGui.PushStyleColor(ImGuiCol.TableRowBgAlt, settings.general.colorTableBgAlt)
 		ImGui.PushStyleColor(ImGuiCol.TableHeaderBg, settings.general.colorTableHeaderBg)
@@ -510,7 +515,7 @@ local displayGUI = function()
 		ImGui.TableSetupScrollFreeze(0, 1)
 		ImGui.TableHeadersRow()
 		for i = 1, max_xtargs do
-			if mq.TLO.Me.XTarget(i)()~=nil and mq.TLO.Me.XTarget(i)() ~= 0 then
+			if mq.TLO.Me.XTarget(i)() ~= nil and mq.TLO.Me.XTarget(i)() ~= 0 then
 				local drawData = {}
 				drawData.row = i
 				drawData.spawn = mq.TLO.Me.XTarget(i)
@@ -554,6 +559,7 @@ local displayGUI = function()
 					break
 				end
 				drawRow(drawData)
+				drawn = true
 			elseif settings.general.showEmptyRows then
 				ImGui.TableNextRow()
 				if settings.general.useRowHeaders == true then
@@ -568,6 +574,8 @@ local displayGUI = function()
 		ImGui.EndTable()
 		ImGui.PopStyleColor(3)
 	end
+	ImGui.EndGroup()
+	if not drawn then rowContext(1) end
 	if ColorCount > 0 then ImGui.PopStyleColor(ColorCount) end
 	if StyleCount > 0 then ImGui.PopStyleVar(StyleCount) end
 	ImGui.End()
