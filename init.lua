@@ -261,7 +261,7 @@ local getDistance = function(spawn)
 		distance = -1
 		return textColor, distance
 	end
-	distance = tonumber(string.format("%.2f", spawn.Distance()))
+	distance = tonumber(string.format("%d", math.floor(spawn.Distance())))
 	if distance <= settings.distance.close then
 		textColor = settings.distance.colorClose
 	elseif distance <= settings.distance.medium then
@@ -510,7 +510,7 @@ local displayGUI = function()
 		ImGui.TableSetupScrollFreeze(0, 1)
 		ImGui.TableHeadersRow()
 		for i = 1, max_xtargs do
-			if mq.TLO.Me.XTarget(i)() ~= '' then
+			if mq.TLO.Me.XTarget(i)()~=nil and mq.TLO.Me.XTarget(i)() ~= 0 then
 				local drawData = {}
 				drawData.row = i
 				drawData.spawn = mq.TLO.Me.XTarget(i)
