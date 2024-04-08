@@ -6,14 +6,12 @@ local mq = require 'mq'
 local ImGui = require 'ImGui'
 local actors = require 'actors'
 local settings = require 'xtxsettings'
-local theme = require('themes')
 local running = true
-
 local xtxheader = "\ay[\agXTargetX\ay]"
 local myName = mq.TLO.Me.DisplayName()
-
+local theme = require('themes')
 local max_xtargs = 1
-
+local themeFile = mq.configDir .. '/MyThemeZ.lua'
 local size = 25
 local angle = 0
 
@@ -26,6 +24,9 @@ local treeview_table_flags = bit32.bor(ImGuiTableFlags.Reorderable, ImGuiTableFl
 ImGuiTableFlags.Borders, ImGuiTableFlags.Resizable, ImGuiTableFlags.SizingFixedFit)
 
 settings.loadSettings()
+if settings.File_Exists(themeFile) then
+    theme = dofile(themeFile)
+end
 --settings.initSettings()
 
 local slowedList = {}
@@ -356,32 +357,37 @@ local rowContext = function(row)
             end
             ImGui.EndMenu()
         end
-        if ImGui.BeginMenu("Group Members") then
-            for i = 0, mq.TLO.Group.GroupSize() - 1 do
-                if ImGui.MenuItem(mq.TLO.Group.Member(i).Name()) then
-                    printf("%s \agSeting Slot \ar%s \agto \ar%s", xtxheader, row, mq.TLO.Group.Member(i).Name())
-                    mq.cmdf("/xtarget set %s %s", row, mq.TLO.Group.Member(i).Name())
+        if mq.TLO.Group.GroupSize() ~= nil then
+            if ImGui.BeginMenu("Group Members") then
+                for i = 0, mq.TLO.Group.GroupSize() - 1 do
+                    if ImGui.MenuItem(mq.TLO.Group.Member(i).Name()) then
+                        printf("%s \agSeting Slot \ar%s \agto \ar%s", xtxheader, row, mq.TLO.Group.Member(i).Name())
+                        mq.cmdf("/xtarget set %s %s", row, mq.TLO.Group.Member(i).Name())
+                    end
                 end
+                ImGui.EndMenu()
             end
-            ImGui.EndMenu()
         end
-        if ImGui.BeginMenu("Raid Members") then
-            for i = 0, mq.TLO.Raid.Members() - 1 do
-                if ImGui.MenuItem(mq.TLO.Raid.Member(i).Name()) then
-                    printf("%s \agSeting Slot \ar%s \agto \ar%s", xtxheader, row, mq.TLO.Group.Member(i).Name())
-                    mq.cmdf("/xtarget set %s %s", row, mq.TLO.Raid.Member(i).Name())
+        if mq.TLO.Raid.Members() > 0 then
+            if ImGui.BeginMenu("Raid Members") then
+                for i = 0, mq.TLO.Raid.Members() - 1 do
+                    if ImGui.MenuItem(mq.TLO.Raid.Member(i).Name()) then
+                        printf("%s \agSeting Slot \ar%s \agto \ar%s", xtxheader, row, mq.TLO.Group.Member(i).Name())
+                        mq.cmdf("/xtarget set %s %s", row, mq.TLO.Raid.Member(i).Name())
+                    end
                 end
+                ImGui.EndMenu()
             end
-            ImGui.EndMenu()
         end
         ImGui.Separator()
         if ImGui.BeginMenu('ThemeZ') then
             local ThemeName = settings.general.themeName
-            for k, data in pairs(settings.theme.Theme) do
+            for k, data in pairs(theme.Theme) do
                 if ImGui.MenuItem(data.Name, '', (data.Name == ThemeName)) then
-                    settings.theme.LoadTheme = data.Name
-                    ThemeName = settings.theme.LoadTheme
+                    theme.LoadTheme = data.Name
+                    ThemeName = theme.LoadTheme
                     settings.general.themeName = ThemeName
+                    settings.saveTheme()
                 end
             end
             ImGui.EndMenu()
@@ -592,14 +598,13 @@ local displayGUI = function()
         end
         ImGui.EndTable()
         ImGui.PopStyleColor(3)
+        ImGui.EndGroup()
+        if not drawn then rowContext(1) end
     end
-    ImGui.EndGroup()
-    if not drawn then rowContext(1) end
     if ColorCount > 0 then ImGui.PopStyleColor(ColorCount) end
     if StyleCount > 0 then ImGui.PopStyleVar(StyleCount) end
     ImGui.End()
 end
-
 
 local cmd_xtx = function(cmd)
     if cmd == nil or cmd == 'help' then
@@ -616,16 +621,17 @@ local cmd_xtx = function(cmd)
     end
 end
 
-mq.imgui.init('displayGUI', displayGUI)
-mq.imgui.init('settingsGUI', settings.settingsGUI)
-if mq.TLO.Plugin('mq2dannet').IsLoaded() == false then
-    printf("%s \aoDanNet is required for this plugin.  \arExiting", xtxheader)
-    mq.exit()
+local function init()
+    mq.imgui.init('displayGUI', displayGUI)
+    mq.imgui.init('settingsGUI', settings.settingsGUI)
+    if mq.TLO.Plugin('mq2dannet').IsLoaded() == false then
+        printf("%s \aoDanNet is required for this plugin.  \arExiting", xtxheader)
+        mq.exit()
+    end
+    mq.cmd('/dgae /lua run xtargetx/backgroundactors')
+    mq.bind('/xtx', cmd_xtx)
+    printf("%s \agstarting. Use \ar/xtx help \ag for a list of commands.", xtxheader)
 end
-mq.cmd('/dgae /lua run xtargetx/backgroundactors')
-mq.bind('/xtx', cmd_xtx)
-printf("%s \agstarting. Use \ar/xtx help \ag for a list of commands.", xtxheader)
-
 
 local function main()
     while running do
@@ -639,6 +645,5 @@ local function main()
     mq.unbind('/xtx')
 end
 
-
-
+init()
 main()
