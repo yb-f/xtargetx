@@ -399,6 +399,7 @@ local rowContext = function(row)
 end
 
 local function CleanXtar()
+	if mq.TLO.Me.Combat() then return end
     if mq.TLO.Me.XTarget() > 0 then
         for i = 1, mq.TLO.Me.XTargetSlots() do
             local xTarg = mq.TLO.Me.XTarget(i)
