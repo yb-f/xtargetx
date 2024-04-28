@@ -390,6 +390,11 @@ local rowContext = function(row)
                     settings.saveTheme()
                 end
             end
+            ImGui.Separator()
+            _ = ImGui.MenuItem('Reload','')
+            if _ then
+                settings.loadTheme()
+            end
             ImGui.EndMenu()
         end
         ImGui.Separator()
