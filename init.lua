@@ -455,7 +455,7 @@ local drawRow = function(drawData)
         printf("%s \agTargeting \ar%s \agID \ar%s", xtxheader, drawData.name, drawData.spawn.ID())
         mq.cmdf('/target id %s', drawData.spawn.ID())
     end
-    if ImGui.IsItemHovered() then
+    if ImGui.IsItemHovered() and settings.AdvToolTip then
         ImGui.BeginTooltip()
         ImGui.Text("%s",drawData.name)
         ImGui.SameLine()
