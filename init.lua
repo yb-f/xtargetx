@@ -455,6 +455,25 @@ local drawRow = function(drawData)
         printf("%s \agTargeting \ar%s \agID \ar%s", xtxheader, drawData.name, drawData.spawn.ID())
         mq.cmdf('/target id %s', drawData.spawn.ID())
     end
+    if ImGui.IsItemHovered() and settings.AdvToolTip then
+        ImGui.BeginTooltip()
+        ImGui.Text("%s",drawData.name)
+        ImGui.SameLine()
+        ImGui.Text("Lvl: %s",drawData.level)
+        ImGui.Text("Dist: %s",drawData.distance)
+        ImGui.SameLine()
+        ImGui.Text("Aggro: %s",drawData.pctAggro * 100)
+        -- ImGui.Text("HP: %s",drawData.pctHp * 100)
+        ImGui.PushStyleColor(ImGuiCol.PlotHistogram, settings.colors.red)
+        ImGui.SetWindowFontScale(0.8)
+        ImGui.ProgressBar(drawData.pctHp, 150, 10, "##hp")
+        ImGui.SameLine()
+        ImGui.SetCursorPos(60, ImGui.GetCursorPosY() - 3)
+        ImGui.Text("HP %d %%",(drawData.pctHp * 100))
+        ImGui.SetWindowFontScale(1)
+        ImGui.PopStyleColor()
+        ImGui.EndTooltip()
+    end
     rowContext(drawData.row)
     --distance
     ImGui.TableNextColumn()
@@ -640,6 +659,7 @@ end
 
 local function main()
     while running do
+        if mq.TLO.Window('CharacterListWnd').Open() then  CleanXtar() running = false end 
         local xFix = mq.TLO.Lua.Script('xfix').Status()
         if xFix ~= 'RUNNING' then
             CleanXtar()
@@ -648,6 +668,7 @@ local function main()
         mq.delay(300)
     end
     mq.unbind('/xtx')
+    mq.exit()
 end
 
 init()

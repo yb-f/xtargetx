@@ -53,11 +53,15 @@ settings.initSettings = function()
     if configSettings.general.autoSize == true then
         settings.window_flags = bit32.bor(settings.window_flags, ImGuiWindowFlags.AlwaysAutoResize)
     end
+    if configSettings.general.AdvToolTip == nil then
+        configSettings.general.AdvToolTip = true
+    end
     settings.hp = configSettings.hp
     settings.aggro = configSettings.aggro
     settings.distance = configSettings.distance
     settings.slow = configSettings.slow
     settings.general = configSettings.general
+    settings.AdvToolTip = configSettings.general.AdvToolTip
     settings.colors = {
         red = IM_COL32(255, 0, 0, 255),
         yellow = IM_COL32(255, 255, 0, 255),
@@ -107,6 +111,7 @@ settings.checkConfig = function()
     if not configSettings.general.showEmptyRows then configSettings.general.showEmptyRows = false end
     if not configSettings.general.showFriendlies then configSettings.general.showFriendlies = false end
     if not configSettings.general.themeName then configSettings.general.themeName = 'Default' end
+    if not configSettings.general.AdvToolTip then configSettings.general.AdvToolTip = true end
     if not configSettings.general.friendlyRowColor then
         configSettings.general.friendlyRowColor = IM_COL32(76, 178, 76,
             115)
@@ -171,6 +176,7 @@ settings.createConfig = function()
             showEmptyRows = false,
             showFriendlies = false,
             themeName = 'Default',
+            AdvToolTip = true,
             friendlyRowColor = IM_COL32(76, 178, 76, 115),
             targetRowColor = IM_COL32(178, 76, 76, 115),
             friendlyTargetRowColor = IM_COL32(178, 76, 178, 115),
@@ -302,7 +308,9 @@ settings.settingsGUI = function()
                 ImGui.SameLine()
                 ImGui.HelpMarker('Background color of rows containing friendly targets')
             end
-
+            configSettings.general.AdvToolTip = ImGui.Checkbox("Advanced Tooltips", configSettings.general.AdvToolTip)
+            ImGui.SameLine()
+            ImGui.HelpMarker('Show advanced tooltips for each row')
             if configSettings.general.showFriendlies then
                 configSettings.general.friendlyTargetRowColor = ImGui.ColorEdit4("Targeted Friendly Row Color",
                     configSettings.general.friendlyTargetRowColor, settings_coloredit_flags)
