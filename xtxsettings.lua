@@ -9,35 +9,12 @@ local myName = mq.TLO.Me.DisplayName()
 local settings = {}
 local configSettings = {}
 local xtxheader = "\ay[\agXTargetX\ay]"
-local themeFile = mq.configDir .. '/MyThemeZ.lua'
+
 settings.openSettingsGUI, settings.drawSettingsGUI = false, false
-local theme = {}
+
 local settings_window_flags = bit32.bor(ImGuiWindowFlags.NoCollapse)
 local settings_coloredit_flags = bit32.bor(ImGuiColorEditFlags.AlphaBar, ImGuiColorEditFlags.AlphaPreview,
     ImGuiColorEditFlags.NoInputs)
-settings.configPath = 'xtargetx_config_' .. myName .. '.lua'
----comment Check to see if the file we want to work on exists.
----@param name string -- Full Path to file
----@return boolean -- returns true if the file exists and false otherwise
-function settings.File_Exists(name)
-    local f=io.open(name,"r")
-    if f~=nil then io.close(f) return true else return false end
-end
-
-
-function settings.saveTheme()
-    configSettings.general.themeName = settings.general.themeName
-    mq.pickle(settings.configPath, configSettings)
-    settings.initSettings()
-end
-
-function settings.loadTheme()
-    if settings.File_Exists(themeFile) then
-        theme = dofile(themeFile)
-        else
-        theme = require('themes')
-    end
-end
 
 settings.initSettings = function()
     settings.window_flags = bit32.bor(ImGuiWindowFlags.None)
@@ -110,8 +87,11 @@ settings.checkConfig = function()
     if not configSettings.general.useRowHeaders then configSettings.general.useRowHeaders = false end
     if not configSettings.general.showEmptyRows then configSettings.general.showEmptyRows = false end
     if not configSettings.general.showFriendlies then configSettings.general.showFriendlies = false end
+<<<<<<< Updated upstream
     if not configSettings.general.themeName then configSettings.general.themeName = 'Default' end
     if not configSettings.general.AdvToolTip then configSettings.general.AdvToolTip = true end
+=======
+>>>>>>> Stashed changes
     if not configSettings.general.friendlyRowColor then
         configSettings.general.friendlyRowColor = IM_COL32(76, 178, 76,
             115)
@@ -175,8 +155,11 @@ settings.createConfig = function()
             useRowHeaders = false,
             showEmptyRows = false,
             showFriendlies = false,
+<<<<<<< Updated upstream
             themeName = 'Default',
             AdvToolTip = true,
+=======
+>>>>>>> Stashed changes
             friendlyRowColor = IM_COL32(76, 178, 76, 115),
             targetRowColor = IM_COL32(178, 76, 76, 115),
             friendlyTargetRowColor = IM_COL32(178, 76, 178, 115),
@@ -193,37 +176,6 @@ settings.createConfig = function()
     mq.pickle(settings.configPath, configSettings)
 end
 
----comment
----@param themeName string -- name of the theme to load form table
----@return integer, integer -- returns the new counter values 
-function settings.DrawTheme(themeName)
-    local StyleCounter = 0
-    local ColorCounter = 0
-    for tID, tData in pairs(theme.Theme) do
-        if tData.Name == themeName then
-            for pID, cData in pairs(theme.Theme[tID].Color) do
-                ImGui.PushStyleColor(pID, ImVec4(cData.Color[1], cData.Color[2], cData.Color[3], cData.Color[4]))
-                ColorCounter = ColorCounter + 1
-            end
-            if tData['Style'] ~= nil then
-                if next(tData['Style']) ~= nil then
-                    
-                    for sID, sData in pairs (theme.Theme[tID].Style) do
-                        if sData.Size ~= nil then
-                            ImGui.PushStyleVar(sID, sData.Size)
-                            StyleCounter = StyleCounter + 1
-                            elseif sData.X ~= nil then
-                            ImGui.PushStyleVar(sID, sData.X, sData.Y)
-                            StyleCounter = StyleCounter + 1
-                        end
-                    end
-                end
-            end
-        end
-    end
-    return ColorCounter, StyleCounter
-end
-
 settings.settingsGUI = function()
     if not settings.openSettingsGUI then return end
     settings.openSettingsGUI, settings.drawSettingsGUI = ImGui.Begin('XTargetX Settings', settings.openSettingsGUI,
@@ -232,7 +184,6 @@ settings.settingsGUI = function()
         ImGui.BeginChild('##Settings_Buttons', ImGui.GetWindowContentRegionWidth(), 25, ImGuiChildFlags.None)
         if ImGui.Button('Save Settings') then
             printf("%s Saving Settings...", xtxheader)
-            configSettings.general.themeName = settings.general.themeName
             mq.pickle(settings.configPath, configSettings)
             settings.initSettings()
             settings.openSettingsGUI = false
@@ -423,7 +374,7 @@ settings.settingsGUI = function()
 end
 
 settings.loadSettings = function()
-    
+    settings.configPath = 'xtargetx_config_' .. myName .. '.lua'
     local configData, err = loadfile(mq.configDir .. '/' .. settings.configPath)
     if err then
         settings.createConfig()
@@ -431,7 +382,6 @@ settings.loadSettings = function()
         configSettings = configData()
         settings.checkConfig()
     end
-    settings.loadTheme()
     settings.initSettings()
 end
 
