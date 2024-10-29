@@ -1,31 +1,32 @@
 --[[
-	Information about targets in the xtarget window
+    Information about targets in the xtarget window
 --]]
 
 local mq = require 'mq'
 local ImGui = require 'ImGui'
 local actors = require 'actors'
 local settings = require 'xtxsettings'
-
 local running = true
-
 local xtxheader = "\ay[\agXTargetX\ay]"
 local myName = mq.TLO.Me.DisplayName()
-
+local theme = require('themes')
 local max_xtargs = 1
-
+local themeFile = mq.configDir .. '/MyThemeZ.lua'
 local size = 25
 local angle = 0
 
 if mq.TLO.Me.XTargetSlots() ~= nil then
-	max_xtargs = mq.TLO.Me.XTargetSlots()
+    max_xtargs = mq.TLO.Me.XTargetSlots()
 end
 
 local window_flags = bit32.bor(ImGuiWindowFlags.None)
 local treeview_table_flags = bit32.bor(ImGuiTableFlags.Reorderable, ImGuiTableFlags.Hideable, ImGuiTableFlags.RowBg,
-	ImGuiTableFlags.Borders, ImGuiTableFlags.Resizable, ImGuiTableFlags.SizingFixedFit)
+ImGuiTableFlags.Borders, ImGuiTableFlags.Resizable, ImGuiTableFlags.SizingFixedFit)
 
 settings.loadSettings()
+if settings.File_Exists(themeFile) then
+    theme = dofile(themeFile)
+end
 --settings.initSettings()
 
 local slowedList = {}
@@ -34,242 +35,242 @@ local mezzedList = {}
 local openGUI, drawGUI = true, true
 
 function RotatePoint(p, cx, cy, angle)
-	local radians = math.rad(angle)
-	local cosA = math.cos(radians)
-	local sinA = math.sin(radians)
-
-	local newX = cosA * (p.x - cx) - sinA * (p.y - cy) + cx
-	local newY = sinA * (p.x - cx) + cosA * (p.y - cy) + cy
-
-	return ImVec2(newX, newY)
+    local radians = math.rad(angle)
+    local cosA = math.cos(radians)
+    local sinA = math.sin(radians)
+    
+    local newX = cosA * (p.x - cx) - sinA * (p.y - cy) + cx
+    local newY = sinA * (p.x - cx) + cosA * (p.y - cy) + cy
+    
+    return ImVec2(newX, newY)
 end
 
 function DrawArrow(topPoint, width, height, color)
-	local draw_list = ImGui.GetWindowDrawList()
-	local p1 = ImVec2(topPoint.x, topPoint.y)
-	local p2 = ImVec2(topPoint.x + width, topPoint.y + height)
-	local p3 = ImVec2(topPoint.x - width, topPoint.y + height)
-
-	-- center
-	local center_x = (p1.x + p2.x + p3.x) / 3
-	local center_y = (p1.y + p2.y + p3.y) / 3
-
-	-- rotate
-	angle = angle + .01
-	p1 = RotatePoint(p1, center_x, center_y, angle)
-	p2 = RotatePoint(p2, center_x, center_y, angle)
-	p3 = RotatePoint(p3, center_x, center_y, angle)
-
-	draw_list:AddTriangleFilled(p1, p2, p3, ImGui.GetColorU32(color))
+    local draw_list = ImGui.GetWindowDrawList()
+    local p1 = ImVec2(topPoint.x, topPoint.y)
+    local p2 = ImVec2(topPoint.x + width, topPoint.y + height)
+    local p3 = ImVec2(topPoint.x - width, topPoint.y + height)
+    
+    -- center
+    local center_x = (p1.x + p2.x + p3.x) / 3
+    local center_y = (p1.y + p2.y + p3.y) / 3
+    
+    -- rotate
+    angle = angle + .01
+    p1 = RotatePoint(p1, center_x, center_y, angle)
+    p2 = RotatePoint(p2, center_x, center_y, angle)
+    p3 = RotatePoint(p3, center_x, center_y, angle)
+    
+    draw_list:AddTriangleFilled(p1, p2, p3, ImGui.GetColorU32(color))
 end
 
 local actor = actors.register(function(message)
-	if message.content.id == 'slowed' then
-		local ID = message.content.targetID
-		local result = message.content.result
-		local slowPct = message.content.slowPct
-		if result == 'CAST_SUCCESS' or result == 'CAST_NOTARGET' then
-			slowedList[ID] = slowPct
-		end
-	elseif message.content.id == 'mezzed' then
-		local ID = message.content.targetID
-		local result = message.content.result
-		if result == 'CAST_SUCCESS' then
-			mezzedList[ID] = 'Mezzed'
-		elseif result == 'CAST_IMMUNE' then
-			mezzedList[ID] = 'Immune'
-		end
-	end
+    if message.content.id == 'slowed' then
+        local ID = message.content.targetID
+        local result = message.content.result
+        local slowPct = message.content.slowPct
+        if result == 'CAST_SUCCESS' or result == 'CAST_NOTARGET' then
+            slowedList[ID] = slowPct
+        end
+        elseif message.content.id == 'mezzed' then
+        local ID = message.content.targetID
+        local result = message.content.result
+        if result == 'CAST_SUCCESS' then
+            mezzedList[ID] = 'Mezzed'
+            elseif result == 'CAST_IMMUNE' then
+            mezzedList[ID] = 'Immune'
+        end
+    end
 end)
 
 local listCleanup = function()
-	for ID in pairs(slowedList) do
-		local remove = false
-		remove = mq.TLO.Me.XTarget() == 0
-		for i = 1, max_xtargs do
-			if mq.TLO.Me.XTarget(i).Type() == 'NPC' or mq.TLO.Me.XTarget(i).Type() == 'Pet' then
-				if mq.TLO.Me.XTarget(i).ID() == ID then
-					remove = false
-					break
-				else
-					remove = true
-				end
-			end
-		end
-		if remove == true then
-			slowedList[ID] = nil
-		end
-	end
-	for ID in pairs(mezzedList) do
-		local remove = false
-		remove = mq.TLO.Me.XTarget() == 0
-		for i = 1, max_xtargs do
-			if mq.TLO.Me.XTarget(i).Type() == 'NPC' or mq.TLO.Me.XTarget(i).Type() == 'Pet' then
-				if mq.TLO.Me.XTarget(i).ID() == ID then
-					remove = false
-					break
-				else
-					remove = true
-				end
-			end
-		end
-		if remove == true then
-			mezzedList[ID] = nil
-		end
-	end
+    for ID in pairs(slowedList) do
+        local remove = false
+        remove = mq.TLO.Me.XTarget() == 0
+        for i = 1, max_xtargs do
+            if mq.TLO.Me.XTarget(i).Type() == 'NPC' or mq.TLO.Me.XTarget(i).Type() == 'Pet' then
+                if mq.TLO.Me.XTarget(i).ID() == ID then
+                    remove = false
+                    break
+                    else
+                    remove = true
+                end
+            end
+        end
+        if remove == true then
+            slowedList[ID] = nil
+        end
+    end
+    for ID in pairs(mezzedList) do
+        local remove = false
+        remove = mq.TLO.Me.XTarget() == 0
+        for i = 1, max_xtargs do
+            if mq.TLO.Me.XTarget(i).Type() == 'NPC' or mq.TLO.Me.XTarget(i).Type() == 'Pet' then
+                if mq.TLO.Me.XTarget(i).ID() == ID then
+                    remove = false
+                    break
+                    else
+                    remove = true
+                end
+            end
+        end
+        if remove == true then
+            mezzedList[ID] = nil
+        end
+    end
 end
 
 local getConLevel = function(spawn)
-	local conColor = spawn.ConColor()
-	local level = spawn.Level()
-	local textColor = settings.colors.purple
-	if conColor == 'GREY' then
-		textColor = settings.colors.grey
-	elseif conColor == 'GREEN' then
-		textColor = settings.colors.green
-	elseif conColor == 'LIGHT BLUE' then
-		textColor = settings.colors.lightBlue
-	elseif conColor == 'BLUE' then
-		textColor = settings.colors.blue
-	elseif conColor == 'WHITE' then
-		textColor = settings.colors.white
-	elseif conColor == 'YELLOW' then
-		textColor = settings.colors.yellow
-	elseif conColor == 'RED' then
-		textColor = settings.colors.red
-	end
-	return textColor, level
+    local conColor = spawn.ConColor()
+    local level = spawn.Level()
+    local textColor = settings.colors.purple
+    if conColor == 'GREY' then
+        textColor = settings.colors.grey
+        elseif conColor == 'GREEN' then
+        textColor = settings.colors.green
+        elseif conColor == 'LIGHT BLUE' then
+        textColor = settings.colors.lightBlue
+        elseif conColor == 'BLUE' then
+        textColor = settings.colors.blue
+        elseif conColor == 'WHITE' then
+        textColor = settings.colors.white
+        elseif conColor == 'YELLOW' then
+        textColor = settings.colors.yellow
+        elseif conColor == 'RED' then
+        textColor = settings.colors.red
+    end
+    return textColor, level
 end
 
 local getName = function(spawn)
-	local name = spawn.CleanName()
-	return name
+    local name = spawn.CleanName()
+    return name
 end
 
 local getPctHp = function(spawn)
-	local pctHp = spawn.PctHPs()
-	local textColor = settings.colors.purple
-	if pctHp == nil then
-		pctHp = 0
-		return textColor, pctHp
-	end
-	if pctHp >= settings.hp.highThreshold then
-		textColor = settings.hp.colorNPCHigh
-	elseif pctHp >= settings.hp.lowThreshold then
-		textColor = settings.hp.colorNPCMid
-	elseif pctHp >= 0 then
-		textColor = settings.hp.colorNPCLow
-	end
-	pctHp = pctHp / 100
-	return textColor, pctHp
+    local pctHp = spawn.PctHPs()
+    local textColor = settings.colors.purple
+    if pctHp == nil then
+        pctHp = 0
+        return textColor, pctHp
+    end
+    if pctHp >= settings.hp.highThreshold then
+        textColor = settings.hp.colorNPCHigh
+        elseif pctHp >= settings.hp.lowThreshold then
+        textColor = settings.hp.colorNPCMid
+        elseif pctHp >= 0 then
+        textColor = settings.hp.colorNPCLow
+    end
+    pctHp = pctHp / 100
+    return textColor, pctHp
 end
 
 local getPctHpFriendly = function(spawn)
-	local pctHp = spawn.PctHPs()
-	local textColor = settings.colors.purple
-	if pctHp == nil then
-		pctHp = 0
-		return textColor, pctHp
-	end
-	if pctHp >= settings.hp.highThreshold then
-		textColor = settings.hp.colorPCHigh
-	elseif pctHp >= settings.hp.lowThreshold then
-		textColor = settings.hp.colorPCMid
-	elseif pctHp >= 0 then
-		textColor = settings.hp.colorPCLow
-	end
-	pctHp = pctHp / 100
-	return textColor, pctHp
+    local pctHp = spawn.PctHPs()
+    local textColor = settings.colors.purple
+    if pctHp == nil then
+        pctHp = 0
+        return textColor, pctHp
+    end
+    if pctHp >= settings.hp.highThreshold then
+        textColor = settings.hp.colorPCHigh
+        elseif pctHp >= settings.hp.lowThreshold then
+        textColor = settings.hp.colorPCMid
+        elseif pctHp >= 0 then
+        textColor = settings.hp.colorPCLow
+    end
+    pctHp = pctHp / 100
+    return textColor, pctHp
 end
 
 local getPctMpFriendly = function(spawn)
-	local pctMp = spawn.PctMana()
-	local textColor = settings.colors.purple
-	if pctMp == nil then
-		pctMp = 0
-		return textColor, pctMp
-	end
-	if pctMp >= 60 then
-		textColor = settings.colors.green
-	elseif pctMp >= 40 then
-		textColor = settings.colors.yellow
-	elseif pctMp >= 0 then
-		textColor = settings.colors.red
-	end
-	return textColor, pctMp
+    local pctMp = spawn.PctMana()
+    local textColor = settings.colors.purple
+    if pctMp == nil then
+        pctMp = 0
+        return textColor, pctMp
+    end
+    if pctMp >= 60 then
+        textColor = settings.colors.green
+        elseif pctMp >= 40 then
+        textColor = settings.colors.yellow
+        elseif pctMp >= 0 then
+        textColor = settings.colors.red
+    end
+    return textColor, pctMp
 end
 
 local getAggroPct = function(spawn)
-	local pctAggro = spawn.PctAggro() / 100
-	local textColor = settings.colors.purple
-	if pctAggro >= 1 then
-		textColor = settings.aggro.colorHave
-	else
-		textColor = settings.aggro.colorNot
-	end
-	return textColor, pctAggro
+    local pctAggro = spawn.PctAggro() / 100
+    local textColor = settings.colors.purple
+    if pctAggro >= 1 then
+        textColor = settings.aggro.colorHave
+        else
+        textColor = settings.aggro.colorNot
+    end
+    return textColor, pctAggro
 end
 
 local getSlow = function(spawn)
-	local ID = spawn.ID()
-	local slowPct = 0
-	local textColor = settings.colors.purple
-	if ID == mq.TLO.Target.ID() then
-		if mq.TLO.Target.Slowed() == nil then
-			slowPct = 0
-		else
-			slowPct = mq.TLO.Target.Slowed.Spell.SlowPct()
-		end
-	elseif slowedList[ID] ~= nil then
-		slowPct = slowedList[ID]
-	end
-	if slowPct == settings.slow.pctThreshold then
-		textColor = settings.slow.colorMax
-	elseif slowPct > 0 then
-		textColor = settings.slow.colorMid
-	else
-		textColor = settings.slow.colorNone
-	end
-	return textColor, slowPct
+    local ID = spawn.ID()
+    local slowPct = 0
+    local textColor = settings.colors.purple
+    if ID == mq.TLO.Target.ID() then
+        if mq.TLO.Target.Slowed() == nil then
+            slowPct = 0
+            else
+            slowPct = mq.TLO.Target.Slowed.Spell.SlowPct()
+        end
+        elseif slowedList[ID] ~= nil then
+        slowPct = slowedList[ID]
+    end
+    if slowPct == settings.slow.pctThreshold then
+        textColor = settings.slow.colorMax
+        elseif slowPct > 0 then
+        textColor = settings.slow.colorMid
+        else
+        textColor = settings.slow.colorNone
+    end
+    return textColor, slowPct
 end
 
 local getMez = function(spawn)
-	local ID = spawn.ID()
-	local mezzed = ''
-	local textColor = settings.colors.purple
-	if ID == mq.TLO.Target.ID() then
-		if mq.TLO.Target.Mezzed() == nil then
-			mezzed = ''
-		else
-			mezzed = 'Mezzed'
-		end
-	elseif mezzedList[ID] then
-		mezzed = mezzedList[ID]
-	end
-	if mezzed == 'Mezzed' then
-		textColor = settings.colors.green
-	elseif mezzed == 'Immune' then
-		textColor = settings.colors.red
-	end
-	return textColor, mezzed
+    local ID = spawn.ID()
+    local mezzed = ''
+    local textColor = settings.colors.purple
+    if ID == mq.TLO.Target.ID() then
+        if mq.TLO.Target.Mezzed() == nil then
+            mezzed = ''
+            else
+            mezzed = 'Mezzed'
+        end
+        elseif mezzedList[ID] then
+        mezzed = mezzedList[ID]
+    end
+    if mezzed == 'Mezzed' then
+        textColor = settings.colors.green
+        elseif mezzed == 'Immune' then
+        textColor = settings.colors.red
+    end
+    return textColor, mezzed
 end
 
 local getDistance = function(spawn)
-	local distance = spawn.Distance()
-	local textColor = settings.colors.purple
-	if distance == nil then
-		distance = -1
-		return textColor, distance
-	end
-	distance = tonumber(string.format("%.2f", spawn.Distance()))
-	if distance <= settings.distance.close then
-		textColor = settings.distance.colorClose
-	elseif distance <= settings.distance.medium then
-		textColor = settings.distance.colorMid
-	elseif distance > settings.distance.medium then
-		textColor = settings.distance.colorFar
-	end
-	return textColor, distance
+    local distance = spawn.Distance()
+    local textColor = settings.colors.purple
+    if distance == nil then
+        distance = -1
+        return textColor, distance
+    end
+    distance = tonumber(string.format("%d", math.floor(spawn.Distance())))
+    if distance <= settings.distance.close then
+        textColor = settings.distance.colorClose
+        elseif distance <= settings.distance.medium then
+        textColor = settings.distance.colorMid
+        elseif distance > settings.distance.medium then
+        textColor = settings.distance.colorFar
+    end
+    return textColor, distance
 end
 
 local rowContext = function(row)
@@ -408,6 +409,28 @@ local rowContext = function(row)
     end
 end
 
+local function CleanXtar()
+	if mq.TLO.Me.Combat() then return end
+    if mq.TLO.Me.XTarget() > 0 then
+        for i = 1, mq.TLO.Me.XTargetSlots() do
+            local xTarg = mq.TLO.Me.XTarget(i)
+            if not (xTarg.ID() > 0 and xTarg.Type() ~= 'Corpse' and xTarg.Type() ~= 'Chest') then
+                local xCount = mq.TLO.Me.XTarget() or 0
+                local xName, xType = xTarg.Name(), xTarg.Type()
+                if (xCount > 0 and xTarg.ID() == 0) or (xType == 'Corpse') or (xType == 'Chest') then
+                    if ((xTarg.Name() ~= 'NULL' and xTarg.ID() == 0) or (xType == 'Corpse') or (xType == 'Chest')) then
+                        mq.cmdf("/squelch /xtarg set %s ET", i)
+                        mq.delay(100)
+                        mq.cmdf("/squelch /xtarg set %s AH", i)
+                        local debugString = string.format('\ayxFix\aw:: Cleaning Xtarget Slot::\at %s\aw XTarget Count::\ao %s\aw Name::\ag %s\aw Type:: \at%s', i, xCount, xName, xType)
+                        print(debugString)
+                    end
+                end
+            end
+        end
+    end
+end
+
 local drawRow = function(drawData)
     ImGui.TableNextRow()
     --Set row color for target and/or friendly
@@ -506,125 +529,133 @@ local drawRow = function(drawData)
 end
 
 local displayGUI = function()
-	if not openGUI then running = false end
-	openGUI, drawGUI = ImGui.Begin('XTargetX##' .. myName, openGUI, settings.window_flags)
-	if drawGUI then
-		ImGui.PushStyleColor(ImGuiCol.TableRowBg, settings.general.colorTableBg)
-		ImGui.PushStyleColor(ImGuiCol.TableRowBgAlt, settings.general.colorTableBgAlt)
-		ImGui.PushStyleColor(ImGuiCol.TableHeaderBg, settings.general.colorTableHeaderBg)
-		if settings.general.useRowHeaders == true then
-			ImGui.BeginTable('##table1', 10, treeview_table_flags)
-			ImGui.TableSetupColumn("Row", bit32.bor(ImGuiTableColumnFlags.NoResize), 30)
-		else
-			ImGui.BeginTable('##table1', 9, treeview_table_flags)
-		end
-		ImGui.TableSetupColumn("Lvl", bit32.bor(ImGuiTableColumnFlags.NoResize), 30)
-		ImGui.TableSetupColumn("Name", bit32.bor(ImGuiTableColumnFlags.WidthStretch, ImGuiTableColumnFlags.NoResize), 100)
-		ImGui.TableSetupColumn("Dist", bit32.bor(ImGuiTableColumnFlags.NoResize), 50)
-		ImGui.TableSetupColumn("Dir", bit32.bor(ImGuiTableColumnFlags.NoResize), 30)
-		if settings.hp.hpAsBar == true then
-			ImGui.TableSetupColumn("HP", bit32.bor(ImGuiTableColumnFlags.NoResize), 100)
-		else
-			ImGui.TableSetupColumn("HP", bit32.bor(ImGuiTableColumnFlags.NoResize), 35)
-		end
-		ImGui.TableSetupColumn("MP", bit32.bor(ImGuiTableColumnFlags.NoResize), 35)
-		if settings.aggro.aggroAsBar == true then
-			ImGui.TableSetupColumn("Aggro", bit32.bor(ImGuiTableColumnFlags.NoResize), 100)
-		else
-			ImGui.TableSetupColumn("Aggro", bit32.bor(ImGuiTableColumnFlags.NoResize), 40)
-		end
-		ImGui.TableSetupColumn("Slow", bit32.bor(ImGuiTableColumnFlags.NoResize), 40)
-		ImGui.TableSetupColumn("Mez", bit32.bor(ImGuiTableColumnFlags.NoResize), 60)
-		ImGui.TableSetupScrollFreeze(0, 1)
-		ImGui.TableHeadersRow()
-		for i = 1, max_xtargs do
-			if mq.TLO.Me.XTarget(i)() ~= '' then
-				local drawData = {}
-				drawData.row = i
-				drawData.spawn = mq.TLO.Me.XTarget(i)
-				drawData.conTextColor = settings.colors.purple
-				drawData.hpTextColor = settings.colors.purple
-				drawData.mpTextColor = settings.colors.purple
-				drawData.aggroTextColor = settings.colors.purple
-				drawData.slowTextColor = settings.colors.purple
-				drawData.distTextColor = settings.colors.purple
-				drawData.mezTextColor = settings.colors.purple
-				drawData.level = 0
-				drawData.pctHp = 0
-				drawData.pctMp = 0
-				drawData.name = ''
-				drawData.pctAggro = -1
-				drawData.slowPct = -1
-				drawData.distance = 0
-				drawData.mezzed = ''
-				drawData.friendly = false
-				local targetType = mq.TLO.Me.XTarget(i).Type()
-				if targetType == 'Pet' then
-					targetType = mq.TLO.Me.XTarget(i).Master.Type()
-				end
-				if targetType == 'NPC' then
-					drawData.conTextColor, drawData.level = getConLevel(drawData.spawn)
-					drawData.name = getName(drawData.spawn)
-					drawData.hpTextColor, drawData.pctHp = getPctHp(drawData.spawn)
-					drawData.aggroTextColor, drawData.pctAggro = getAggroPct(drawData.spawn)
-					drawData.slowTextColor, drawData.slowPct = getSlow(drawData.spawn)
-					drawData.mezTextColor, drawData.mezzed = getMez(drawData.spawn)
-					drawData.distTextColor, drawData.distance = getDistance(drawData.spawn)
-				elseif ((targetType == 'PC' or targetType == 'Mercenary') and (settings.general.showFriendlies or settings.general.showEmptyRows)) then
-					drawData.conTextColor, drawData.level = getConLevel(drawData.spawn)
-					drawData.name = getName(drawData.spawn)
-					drawData.hpTextColor, drawData.pctHp = getPctHpFriendly(drawData.spawn)
-					drawData.mpTextColor, drawData.pctMp = getPctMpFriendly(drawData.spawn)
-					drawData.distTextColor, drawData.distance = getDistance(drawData.spawn)
-					drawData.friendly = true
-				end
-				if drawData.level == nil or drawData.name == nil or drawData.pctHp == 0 or drawData.distance == -1 then
-					break
-				end
-				drawRow(drawData)
-			elseif settings.general.showEmptyRows then
-				ImGui.TableNextRow()
-				if settings.general.useRowHeaders == true then
-					ImGui.TableNextColumn()
-					ImGui.TextColored(settings.general.colorRowNum, tostring(i))
-				end
-				ImGui.TableNextColumn()
-				ImGui.Selectable("##" .. i, false, ImGuiSelectableFlags.SpanAllColumns)
-				rowContext(i)
-			end
-		end
-		ImGui.EndTable()
-		ImGui.PopStyleColor(3)
-	end
-	ImGui.End()
+    if not openGUI then running = false end
+    local ColorCount, StyleCount = settings.DrawTheme(settings.general.themeName)
+    openGUI, drawGUI = ImGui.Begin('XTargetX##' .. myName, openGUI, settings.window_flags)
+    local drawn = false
+    if drawGUI then
+        ImGui.BeginGroup()
+        ImGui.PushStyleColor(ImGuiCol.TableRowBg, settings.general.colorTableBg)
+        ImGui.PushStyleColor(ImGuiCol.TableRowBgAlt, settings.general.colorTableBgAlt)
+        ImGui.PushStyleColor(ImGuiCol.TableHeaderBg, settings.general.colorTableHeaderBg)
+        if settings.general.useRowHeaders == true then
+            ImGui.BeginTable('##table1', 10, treeview_table_flags)
+            ImGui.TableSetupColumn("Row", bit32.bor(ImGuiTableColumnFlags.NoResize), 30)
+            else
+            ImGui.BeginTable('##table1', 9, treeview_table_flags)
+        end
+        ImGui.TableSetupColumn("Lvl", bit32.bor(ImGuiTableColumnFlags.NoResize), 30)
+        ImGui.TableSetupColumn("Name", bit32.bor(ImGuiTableColumnFlags.WidthStretch, ImGuiTableColumnFlags.NoResize), 100)
+        ImGui.TableSetupColumn("Dist", bit32.bor(ImGuiTableColumnFlags.NoResize), 50)
+        ImGui.TableSetupColumn("Dir", bit32.bor(ImGuiTableColumnFlags.NoResize), 30)
+        if settings.hp.hpAsBar == true then
+            ImGui.TableSetupColumn("HP", bit32.bor(ImGuiTableColumnFlags.NoResize), 100)
+            else
+            ImGui.TableSetupColumn("HP", bit32.bor(ImGuiTableColumnFlags.NoResize), 35)
+        end
+        ImGui.TableSetupColumn("MP", bit32.bor(ImGuiTableColumnFlags.NoResize), 35)
+        if settings.aggro.aggroAsBar == true then
+            ImGui.TableSetupColumn("Aggro", bit32.bor(ImGuiTableColumnFlags.NoResize), 100)
+            else
+            ImGui.TableSetupColumn("Aggro", bit32.bor(ImGuiTableColumnFlags.NoResize), 40)
+        end
+        ImGui.TableSetupColumn("Slow", bit32.bor(ImGuiTableColumnFlags.NoResize), 40)
+        ImGui.TableSetupColumn("Mez", bit32.bor(ImGuiTableColumnFlags.NoResize), 60)
+        ImGui.TableSetupScrollFreeze(0, 1)
+        ImGui.TableHeadersRow()
+        for i = 1, max_xtargs do
+            if mq.TLO.Me.XTarget(i)() ~= nil and mq.TLO.Me.XTarget(i)() ~= 0 then
+                local drawData = {}
+                drawData.row = i
+                drawData.spawn = mq.TLO.Me.XTarget(i)
+                drawData.conTextColor = settings.colors.purple
+                drawData.hpTextColor = settings.colors.purple
+                drawData.mpTextColor = settings.colors.purple
+                drawData.aggroTextColor = settings.colors.purple
+                drawData.slowTextColor = settings.colors.purple
+                drawData.distTextColor = settings.colors.purple
+                drawData.mezTextColor = settings.colors.purple
+                drawData.level = 0
+                drawData.pctHp = 0
+                drawData.pctMp = 0
+                drawData.name = ''
+                drawData.pctAggro = -1
+                drawData.slowPct = -1
+                drawData.distance = 0
+                drawData.mezzed = ''
+                drawData.friendly = false
+                local targetType = mq.TLO.Me.XTarget(i).Type()
+                if targetType == 'Pet' then
+                    targetType = mq.TLO.Me.XTarget(i).Master.Type()
+                end
+                if targetType == 'NPC' then
+                    drawData.conTextColor, drawData.level = getConLevel(drawData.spawn)
+                    drawData.name = getName(drawData.spawn)
+                    drawData.hpTextColor, drawData.pctHp = getPctHp(drawData.spawn)
+                    drawData.aggroTextColor, drawData.pctAggro = getAggroPct(drawData.spawn)
+                    drawData.slowTextColor, drawData.slowPct = getSlow(drawData.spawn)
+                    drawData.mezTextColor, drawData.mezzed = getMez(drawData.spawn)
+                    drawData.distTextColor, drawData.distance = getDistance(drawData.spawn)
+                    elseif ((targetType == 'PC' or targetType == 'Mercenary') and (settings.general.showFriendlies or settings.general.showEmptyRows)) then
+                    drawData.conTextColor, drawData.level = getConLevel(drawData.spawn)
+                    drawData.name = getName(drawData.spawn)
+                    drawData.hpTextColor, drawData.pctHp = getPctHpFriendly(drawData.spawn)
+                    drawData.mpTextColor, drawData.pctMp = getPctMpFriendly(drawData.spawn)
+                    drawData.distTextColor, drawData.distance = getDistance(drawData.spawn)
+                    drawData.friendly = true
+                end
+                if drawData.level == nil or drawData.name == nil or drawData.pctHp == 0 or drawData.distance == -1 then
+                    break
+                end
+                drawRow(drawData)
+                drawn = true
+                elseif settings.general.showEmptyRows then
+                ImGui.TableNextRow()
+                if settings.general.useRowHeaders == true then
+                    ImGui.TableNextColumn()
+                    ImGui.TextColored(settings.general.colorRowNum, tostring(i))
+                end
+                ImGui.TableNextColumn()
+                ImGui.Selectable("##" .. i, false, ImGuiSelectableFlags.SpanAllColumns)
+                rowContext(i)
+            end
+        end
+        ImGui.EndTable()
+        ImGui.PopStyleColor(3)
+        ImGui.EndGroup()
+        if not drawn then rowContext(1) end
+    end
+    if ColorCount > 0 then ImGui.PopStyleColor(ColorCount) end
+    if StyleCount > 0 then ImGui.PopStyleVar(StyleCount) end
+    ImGui.End()
 end
-
 
 local cmd_xtx = function(cmd)
-	if cmd == nil or cmd == 'help' then
-		printf("%s \ar/xtx exit \ao--- Exit script (Also \ar/xtx stop \aoand \ar/xtx quit)", xtxheader)
-		printf("%s \ar/xtx settings \ao--- Open Settings Window", xtxheader)
-	end
-	if cmd == 'exit' or cmd == 'quit' or cmd == 'stop' then
-		mq.cmd('/dgae /lua stop xtargetx/backgroundactors')
-		running = false
-	end
-	if cmd == 'settings' then
-		settings.openSettingsGUI = true
-		settings.drawSettingsGUI = true
-	end
+    if cmd == nil or cmd == 'help' then
+        printf("%s \ar/xtx exit \ao--- Exit script (Also \ar/xtx stop \aoand \ar/xtx quit)", xtxheader)
+        printf("%s \ar/xtx settings \ao--- Open Settings Window", xtxheader)
+    end
+    if cmd == 'exit' or cmd == 'quit' or cmd == 'stop' then
+        mq.cmd('/dgae /lua stop xtargetx/backgroundactors')
+        running = false
+    end
+    if cmd == 'settings' then
+        settings.openSettingsGUI = true
+        settings.drawSettingsGUI = true
+    end
 end
 
-mq.imgui.init('displayGUI', displayGUI)
-mq.imgui.init('settingsGUI', settings.settingsGUI)
-if mq.TLO.Plugin('mq2dannet').IsLoaded() == false then
-	printf("%s \aoDanNet is required for this plugin.  \arExiting", xtxheader)
-	mq.exit()
+local function init()
+    mq.imgui.init('displayGUI', displayGUI)
+    mq.imgui.init('settingsGUI', settings.settingsGUI)
+    if mq.TLO.Plugin('mq2dannet').IsLoaded() == false then
+        printf("%s \aoDanNet is required for this plugin.  \arExiting", xtxheader)
+        mq.exit()
+    end
+    mq.cmd('/dgae /lua run xtargetx/backgroundactors')
+    mq.bind('/xtx', cmd_xtx)
+    printf("%s \agstarting. Use \ar/xtx help \ag for a list of commands.", xtxheader)
 end
-mq.cmd('/dgae /lua run xtargetx/backgroundactors')
-mq.bind('/xtx', cmd_xtx)
-printf("%s \agstarting. Use \ar/xtx help \ag for a list of commands.", xtxheader)
-
 
 local function main()
     while running do
@@ -640,6 +671,5 @@ local function main()
     mq.exit()
 end
 
-
-
+init()
 main()
