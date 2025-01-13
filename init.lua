@@ -6,6 +6,7 @@ local mq = require 'mq'
 local ImGui = require 'ImGui'
 local actors = require 'actors'
 local settings = require 'xtxsettings'
+local Icons = require('mq.ICONS')
 local running = true
 local xtxheader = "\ay[\agXTargetX\ay]"
 local myName = mq.TLO.Me.DisplayName()
@@ -21,7 +22,7 @@ end
 
 local window_flags = bit32.bor(ImGuiWindowFlags.None)
 local treeview_table_flags = bit32.bor(ImGuiTableFlags.Reorderable, ImGuiTableFlags.Hideable, ImGuiTableFlags.RowBg,
-ImGuiTableFlags.Borders, ImGuiTableFlags.Resizable, ImGuiTableFlags.SizingFixedFit)
+ImGuiTableFlags.Borders, ImGuiTableFlags.Resizable)
 
 settings.loadSettings()
 if settings.File_Exists(themeFile) then
@@ -76,9 +77,9 @@ local actor = actors.register(function(message)
         local ID = message.content.targetID
         local result = message.content.result
         if result == 'CAST_SUCCESS' then
-            mezzedList[ID] = 'Mezzed'
+            mezzedList[ID] = Icons.MD_SNOOZE
             elseif result == 'CAST_IMMUNE' then
-            mezzedList[ID] = 'Immune'
+            mezzedList[ID] = Icons.FA_EXCLAMATION
         end
     end
 end)
@@ -242,14 +243,15 @@ local getMez = function(spawn)
         if mq.TLO.Target.Mezzed() == nil then
             mezzed = ''
             else
-            mezzed = 'Mezzed'
+            mezzed = Icons.MD_SNOOZE
         end
         elseif mezzedList[ID] then
         mezzed = mezzedList[ID]
     end
-    if mezzed == 'Mezzed' then
+    if mezzed == Icons.MD_SNOOZE then
         textColor = settings.colors.green
-        elseif mezzed == 'Immune' then
+        elseif mezzed == Icons.FA_EXCLAMATION
+        then
         textColor = settings.colors.red
     end
     return textColor, mezzed
@@ -540,27 +542,27 @@ local displayGUI = function()
         ImGui.PushStyleColor(ImGuiCol.TableHeaderBg, settings.general.colorTableHeaderBg)
         if settings.general.useRowHeaders == true then
             ImGui.BeginTable('##table1', 10, treeview_table_flags)
-            ImGui.TableSetupColumn("Row", bit32.bor(ImGuiTableColumnFlags.NoResize), 30)
+            ImGui.TableSetupColumn("Row", bit32.bor(ImGuiTableColumnFlags.None), 30)
             else
             ImGui.BeginTable('##table1', 9, treeview_table_flags)
         end
-        ImGui.TableSetupColumn("Lvl", bit32.bor(ImGuiTableColumnFlags.NoResize), 30)
-        ImGui.TableSetupColumn("Name", bit32.bor(ImGuiTableColumnFlags.WidthStretch, ImGuiTableColumnFlags.NoResize), 100)
-        ImGui.TableSetupColumn("Dist", bit32.bor(ImGuiTableColumnFlags.NoResize), 50)
-        ImGui.TableSetupColumn("Dir", bit32.bor(ImGuiTableColumnFlags.NoResize), 30)
+        ImGui.TableSetupColumn("Lvl", bit32.bor(ImGuiTableColumnFlags.None), 30)
+        ImGui.TableSetupColumn("Name", bit32.bor(ImGuiTableColumnFlags.None), 100)
+        ImGui.TableSetupColumn("Dist", bit32.bor(ImGuiTableColumnFlags.None), 50)
+        ImGui.TableSetupColumn("Dir", bit32.bor(ImGuiTableColumnFlags.None), 30)
         if settings.hp.hpAsBar == true then
-            ImGui.TableSetupColumn("HP", bit32.bor(ImGuiTableColumnFlags.NoResize), 100)
+            ImGui.TableSetupColumn("HP", bit32.bor(ImGuiTableColumnFlags.None), 100)
             else
-            ImGui.TableSetupColumn("HP", bit32.bor(ImGuiTableColumnFlags.NoResize), 35)
+            ImGui.TableSetupColumn("HP", bit32.bor(ImGuiTableColumnFlags.None), 35)
         end
-        ImGui.TableSetupColumn("MP", bit32.bor(ImGuiTableColumnFlags.NoResize), 35)
+        ImGui.TableSetupColumn("MP", bit32.bor(ImGuiTableColumnFlags.None), 35)
         if settings.aggro.aggroAsBar == true then
-            ImGui.TableSetupColumn("Aggro", bit32.bor(ImGuiTableColumnFlags.NoResize), 100)
+            ImGui.TableSetupColumn("Aggro", bit32.bor(ImGuiTableColumnFlags.None), 100)
             else
-            ImGui.TableSetupColumn("Aggro", bit32.bor(ImGuiTableColumnFlags.NoResize), 40)
+            ImGui.TableSetupColumn("Aggro", bit32.bor(ImGuiTableColumnFlags.None), 40)
         end
-        ImGui.TableSetupColumn("Slow", bit32.bor(ImGuiTableColumnFlags.NoResize), 40)
-        ImGui.TableSetupColumn("Mez", bit32.bor(ImGuiTableColumnFlags.NoResize), 60)
+        ImGui.TableSetupColumn("Slow", bit32.bor(ImGuiTableColumnFlags.None), 40)
+        ImGui.TableSetupColumn("Mez", bit32.bor(ImGuiTableColumnFlags.None), 60)
         ImGui.TableSetupScrollFreeze(0, 1)
         ImGui.TableHeadersRow()
         for i = 1, max_xtargs do
@@ -659,7 +661,7 @@ end
 
 local function main()
     while running do
-        if mq.TLO.Window('CharacterListWnd').Open() then  CleanXtar() running = false end 
+        if mq.TLO.Window('CharacterListWnd').Open() then running = false end
         local xFix = mq.TLO.Lua.Script('xfix').Status()
         if xFix ~= 'RUNNING' then
             CleanXtar()
