@@ -20,10 +20,14 @@ settings.configPath = 'xtargetx_config_' .. myName .. '.lua'
 ---@param name string -- Full Path to file
 ---@return boolean -- returns true if the file exists and false otherwise
 function settings.File_Exists(name)
-    local f=io.open(name,"r")
-    if f~=nil then io.close(f) return true else return false end
+    local f = io.open(name, "r")
+    if f ~= nil then
+        io.close(f)
+        return true
+    else
+        return false
+    end
 end
-
 
 function settings.saveTheme()
     configSettings.general.themeName = settings.general.themeName
@@ -34,7 +38,7 @@ end
 function settings.loadTheme()
     if settings.File_Exists(themeFile) then
         theme = dofile(themeFile)
-        else
+    else
         theme = require('themes')
     end
 end
@@ -63,14 +67,15 @@ settings.initSettings = function()
     settings.general = configSettings.general
     settings.AdvToolTip = configSettings.general.AdvToolTip
     settings.colors = {
-        red = IM_COL32(255, 0, 0, 255),
-        yellow = IM_COL32(255, 255, 0, 255),
-        white = IM_COL32(255, 255, 255, 255),
-        blue = IM_COL32(0, 0, 255, 2551),
-        lightBlue = IM_COL32(0, 255, 255, 255),
-        green = IM_COL32(0, 255, 0, 255),
-        grey = IM_COL32(158, 158, 158, 255),
-        purple = IM_COL32(255, 0, 255, 255),
+        red = IM_COL32(255, 0, 0, 75),
+        yellow = IM_COL32(255, 255, 0, 85),
+        white = IM_COL32(255, 255, 255, 100),
+        blue = IM_COL32(0, 0, 255, 75),
+        lightBlue = IM_COL32(0, 164, 255, 80),
+        green = IM_COL32(0, 255, 0, 85),
+        grey = IM_COL32(158, 158, 158, 75),
+        purple = IM_COL32(255, 0, 255, 85),
+        default = IM_COL32(255, 255, 255, 255),
     }
 end
 
@@ -147,25 +152,25 @@ settings.createConfig = function()
             colorPCLow = IM_COL32(255, 0, 0, 255),
             highThreshold = 100,
             lowThreshold = 33,
-            hpAsBar = false
+            hpAsBar = false,
         }
         configSettings.aggro = {
             colorHave = IM_COL32(0, 255, 0, 255),
             colorNot = IM_COL32(255, 0, 0, 255),
-            aggroAsBar = false
+            aggroAsBar = false,
         }
         configSettings.distance = {
             close = 50,
             medium = 200,
             colorClose = IM_COL32(0, 255, 0, 255),
             colorMid = IM_COL32(255, 255, 0, 255),
-            colorFar = IM_COL32(255, 0, 0, 255)
+            colorFar = IM_COL32(255, 0, 0, 255),
         }
         configSettings.slow = {
             pctThreshold = 75,
             colorMax = IM_COL32(0, 255, 0, 255),
             colorMid = IM_COL32(255, 255, 0, 255),
-            colorNone = IM_COL32(255, 0, 0, 255)
+            colorNone = IM_COL32(255, 0, 0, 255),
         }
         configSettings.general = {
             lockWindowSize = false,
@@ -184,7 +189,7 @@ settings.createConfig = function()
             colorRowNum = IM_COL32(158, 158, 158, 255),
             colorTableBg = IM_COL32(0, 0, 0, 0),
             colorTableBgAlt = IM_COL32(255, 255, 255, 15),
-            colorTableHeaderBg = IM_COL32(48, 48, 51, 255)
+            colorTableHeaderBg = IM_COL32(48, 48, 51, 255),
         }
     else
         configSettings = configData()
@@ -195,24 +200,23 @@ end
 
 ---comment
 ---@param themeName string -- name of the theme to load form table
----@return integer, integer -- returns the new counter values 
+---@return integer, integer -- returns the new counter values
 function settings.DrawTheme(themeName)
     local StyleCounter = 0
     local ColorCounter = 0
     for tID, tData in pairs(theme.Theme) do
         if tData.Name == themeName then
             for pID, cData in pairs(theme.Theme[tID].Color) do
-                ImGui.PushStyleColor(pID, ImVec4(cData.Color[1], cData.Color[2], cData.Color[3], cData.Color[4]))
+                ImGui.PushStyleColor(ImGuiCol[cData.PropertyName], ImVec4(cData.Color[1], cData.Color[2], cData.Color[3], cData.Color[4]))
                 ColorCounter = ColorCounter + 1
             end
             if tData['Style'] ~= nil then
                 if next(tData['Style']) ~= nil then
-                    
-                    for sID, sData in pairs (theme.Theme[tID].Style) do
+                    for sID, sData in pairs(theme.Theme[tID].Style) do
                         if sData.Size ~= nil then
                             ImGui.PushStyleVar(sID, sData.Size)
                             StyleCounter = StyleCounter + 1
-                            elseif sData.X ~= nil then
+                        elseif sData.X ~= nil then
                             ImGui.PushStyleVar(sID, sData.X, sData.Y)
                             StyleCounter = StyleCounter + 1
                         end
@@ -423,7 +427,6 @@ settings.settingsGUI = function()
 end
 
 settings.loadSettings = function()
-    
     local configData, err = loadfile(mq.configDir .. '/' .. settings.configPath)
     if err then
         settings.createConfig()
